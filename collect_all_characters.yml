@@ -1,0 +1,368 @@
+name: Relink ER 全キャラ情報収集
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 全キャラ・ジーン・攻略情報を収集
+        shell: bash
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import html
+          import json
+          import re
+          import time
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          POSTS = Path("posts.json")
+          STATUS = Path("status.json")
+
+          # 全プレイアブルキャラ
+          CHARACTERS = {
+              "主人公（グラン／ジータ）": [
+                  "グラン", "ジータ", "Gran", "Djeeta"
+              ],
+              "カタリナ": ["カタリナ", "Katalina"],
+              "ラカム": ["ラカム", "Rackam"],
+              "イオ": ["イオ", "Io"],
+              "ロゼッタ": ["ロゼッタ", "Rosetta"],
+              "オイゲン": ["オイゲン", "Eugen"],
+              "フェリ": ["フェリ", "Ferry"],
+              "ランスロット": ["ランスロット", "Lancelot"],
+              "ヴェイン": ["ヴェイン", "Vane"],
+              "パーシヴァル": ["パーシヴァル", "Percival"],
+              "ジークフリート": ["ジークフリート", "Siegfried"],
+              "バザラガ": ["バザラガ", "Vaseraga"],
+              "ゼタ": ["ゼタ", "Zeta"],
+              "シャルロッテ": ["シャルロッテ", "Charlotta"],
+              "ガンダゴウザ": ["ガンダゴウザ", "Ghandagoza"],
+              "カリオストロ": ["カリオストロ", "Cagliostro"],
+              "ナルメア": ["ナルメア", "Narmaya"],
+              "ヨダルラーハ": ["ヨダルラーハ", "Yodarha"],
+              "イド": ["イド", "Id Relink"],
+              "シエテ": ["シエテ", "Seofon"],
+              "ソーン": ["ソーン", "Tweyen"],
+              "サンダルフォン": ["サンダルフォン", "Sandalphon"],
+              "ベアトリクス": ["ベアトリクス", "Beatrix"],
+              "ユーステス": ["ユーステス", "Eustace"],
+              "フラウ": ["フラウ", "Fraux"],
+              "フェディエル": ["フェディエル", "Fediel"],
+              "ガランツァ": ["ガランツァ", "Gallanza"],
+              "マギラフリラ": [
+                  "マギラフリラ", "Maglielle", "Magielle"
+              ],
+          }
+
+          GENE_TOPICS = {
+              "ダメージ上限": [
+                  "ダメージ上限", "ダメ上限", "damage cap",
+                  "通常攻撃上限", "アビリティ上限", "奥義上限"
+              ],
+              "追撃": ["追撃", "supplementary damage"],
+              "戦気": ["戦気"],
+              "クリティカル": ["クリティカル", "critical"],
+              "有利属性変換": ["有利属性変換", "war elemental"],
+              "コンボボーナス": ["コンボボーナス", "combo booster"],
+              "暴君": ["暴君", "tyranny"],
+              "渾身": ["渾身", "stamina"],
+              "修羅": ["修羅"],
+              "スタン": ["スタン", "stun power"],
+              "回避性能": ["回避性能", "improved dodge"],
+              "ポーション所持数": ["ポーション所持数", "potion hoarder"],
+              "ガッツ・自己復活": [
+                  "ガッツ", "自己復活", "guts", "autorevive"
+              ],
+              "ジーン全般": ["ジーン", "sigil"],
+          }
+
+          GUIDE_TOPICS = {
+              "CHAOS++": ["chaos++", "カオス++"],
+              "ルシファー": ["ルシファー", "lucilius"],
+              "ベルゼバブ": ["ベルゼバブ", "beelzebub"],
+              "プロトバハムート": [
+                  "プロトバハムート", "proto bahamut"
+              ],
+              "ザ・ワールド": ["ザ・ワールド", "the world"],
+              "インフェルノ": ["インフェルノ", "inferno"],
+              "極沌空所": ["極沌空所"],
+              "オムニス・ゼーガリス": ["オムニス", "ゼーガリス"],
+              "素材・周回": [
+                  "素材", "周回", "ドロップ", "効率",
+                  "入手方法", "稼ぎ"
+              ],
+              "CPU・放置編成": [
+                  "cpu", "放置", "フルアシスト",
+                  "オート周回"
+              ],
+              "DPS・木人検証": [
+                  "dps", "木人", "トライアル",
+                  "ダメージ検証"
+              ],
+              "武器・超越強化": [
+                  "武器", "超越", "究極武器",
+                  "覚醒武器"
+              ],
+              "マスタースキル": [
+                  "マスタースキル", "master skill",
+                  "master trait"
+              ],
+              "召喚石": ["召喚石", "summon"],
+          }
+
+          # キャラは全員を個別検索。
+          SEARCHES = [
+              ("総合：グラブルリリンク", "#グラブルリリンク"),
+              ("総合：Relink", "#Relink"),
+              ("総合：Endless Ragnarok", '"Endless Ragnarok"'),
+              ("総合：ER日本語", "エンドレスラグナロク"),
+              ("ジーン", "グラブルリリンク ジーン"),
+              ("ダメージ上限", "グラブルリリンク ダメージ上限"),
+              ("攻略", "グラブルリリンク 攻略"),
+              ("CHAOS++", "グラブルリリンク CHAOS++"),
+              ("CPU・放置", "グラブルリリンク CPU 放置"),
+          ]
+
+          for topic, names in CHARACTERS.items():
+              SEARCHES.append(
+                  (f"キャラ：{topic}", f'"{names[0]}" グラブルリリンク')
+              )
+
+          # カード不要版のため公式X APIではなく公開RSSを使用。
+          # 公開RSSが停止した場合は errors に記録される。
+          RSS_TEMPLATES = [
+              "https://nitter.net/search/rss?f=tweets&q={query}",
+          ]
+
+          def clean_text(value: str) -> str:
+              value = re.sub(r"<[^>]+>", " ", value or "")
+              value = html.unescape(value)
+              return re.sub(r"\s+", " ", value).strip()
+
+          def contains_any(text: str, words: list[str]) -> bool:
+              low = text.casefold()
+              return any(word.casefold() in low for word in words)
+
+          def classify(text: str) -> tuple[str, str]:
+              for character, keys in CHARACTERS.items():
+                  if contains_any(text, keys):
+                      return "1. キャラ", character
+
+              for topic, keys in GENE_TOPICS.items():
+                  if contains_any(text, keys):
+                      return "2. ジーン情報", topic
+
+              for topic, keys in GUIDE_TOPICS.items():
+                  if contains_any(text, keys):
+                      return "3. 攻略に有用な情報", topic
+
+              if contains_any(
+                  text,
+                  ["アップデート", "update", "patch", "ver."]
+              ):
+                  return "4. アップデート", "更新情報"
+
+              if contains_any(
+                  text,
+                  ["バグ", "不具合", "bug", "検証"]
+              ):
+                  return "5. 不具合・検証", "不具合・検証"
+
+              return "6. その他", "未分類"
+
+          def fetch(url: str) -> bytes:
+              request = urllib.request.Request(
+                  url,
+                  headers={
+                      "User-Agent":
+                          "Mozilla/5.0 RelinkERArchive/2.0"
+                  },
+              )
+              with urllib.request.urlopen(
+                  request,
+                  timeout=30
+              ) as response:
+                  return response.read()
+
+          def parse_feed(
+              raw: bytes,
+              search_name: str
+          ) -> list[dict]:
+              root = ET.fromstring(raw)
+              results = []
+
+              for item in root.findall(".//item"):
+                  title = clean_text(
+                      item.findtext("title", "")
+                  )
+                  description = clean_text(
+                      item.findtext("description", "")
+                  )
+                  link = (
+                      item.findtext("link", "") or ""
+                  ).strip()
+                  published = item.findtext("pubDate", "")
+
+                  text = f"{title} {description}".strip()
+                  if not link or not text:
+                      continue
+
+                  # Relink無関係の投稿をある程度除外
+                  if not contains_any(
+                      text,
+                      [
+                          "グラブルリリンク",
+                          "relink",
+                          "エンドレスラグナロク",
+                          "endless ragnarok",
+                      ],
+                  ):
+                      continue
+
+                  category, topic = classify(text)
+
+                  x_link = re.sub(
+                      r"https?://[^/]+/",
+                      "https://x.com/",
+                      link,
+                      count=1,
+                  )
+
+                  results.append({
+                      "id": hashlib.sha256(
+                          x_link.encode("utf-8")
+                      ).hexdigest()[:24],
+                      "title": title[:180],
+                      "summary": text[:300],
+                      "url": x_link,
+                      "category": category,
+                      "topic": topic,
+                      "source_search": search_name,
+                      "published_at": published,
+                      "collected_at":
+                          datetime.now(timezone.utc).isoformat(),
+                  })
+
+              return results
+
+          old_posts = []
+          if POSTS.exists():
+              try:
+                  old_posts = json.loads(
+                      POSTS.read_text(encoding="utf-8")
+                  )
+              except Exception:
+                  old_posts = []
+
+          by_id = {
+              post["id"]: post
+              for post in old_posts
+              if isinstance(post, dict) and post.get("id")
+          }
+
+          added = 0
+          errors = []
+
+          for index, (search_name, query) in enumerate(SEARCHES, 1):
+              encoded = urllib.parse.quote(query)
+              success = False
+
+              for template in RSS_TEMPLATES:
+                  try:
+                      raw = fetch(
+                          template.format(query=encoded)
+                      )
+                      for post in parse_feed(
+                          raw,
+                          search_name
+                      ):
+                          if post["id"] not in by_id:
+                              added += 1
+                          by_id[post["id"]] = post
+                      success = True
+                      break
+                  except Exception as error:
+                      errors.append(
+                          f"{search_name}: "
+                          f"{type(error).__name__}"
+                      )
+
+              print(
+                  f"[{index}/{len(SEARCHES)}] "
+                  f"{search_name}: "
+                  f"{'OK' if success else 'FAILED'}"
+              )
+              time.sleep(1)
+
+          posts = sorted(
+              by_id.values(),
+              key=lambda post:
+                  post.get("collected_at", ""),
+              reverse=True,
+          )[:3000]
+
+          POSTS.write_text(
+              json.dumps(
+                  posts,
+                  ensure_ascii=False,
+                  indent=2,
+              ),
+              encoding="utf-8",
+          )
+
+          status = {
+              "last_run":
+                  datetime.now(timezone.utc).isoformat(),
+              "added": added,
+              "total": len(posts),
+              "search_count": len(SEARCHES),
+              "character_count": len(CHARACTERS),
+              "errors": errors,
+          }
+
+          STATUS.write_text(
+              json.dumps(
+                  status,
+                  ensure_ascii=False,
+                  indent=2,
+              ),
+              encoding="utf-8",
+          )
+
+          print(json.dumps(
+              status,
+              ensure_ascii=False,
+              indent=2,
+          ))
+          PY
+
+      - name: 収集結果をGitHubへ保存
+        shell: bash
+        run: |
+          git config user.name "relink-er-archive-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add posts.json status.json
+          git diff --cached --quiet || git commit -m "ER情報を自動更新"
+          git push
