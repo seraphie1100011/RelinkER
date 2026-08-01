@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111d">
+<title>Relink ER 管理画面</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--bg:#08111d;--panel:#101b2b;--line:#29415f;--text:#eef5ff;--muted:#91a4be;--accent:#67b4ff;--ok:#53d49c;--warn:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);padding-bottom:30px}
+header{padding:calc(20px + env(safe-area-inset-top)) 16px 20px;background:linear-gradient(135deg,#183964,#0f6b66)}
+h1{margin:0 0 6px;font-size:24px}.sub{margin:0;color:#d7e8f7;font-size:13px;line-height:1.5}
+main{padding:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-weight:700;margin:0 0 7px}input,select,textarea{width:100%;padding:13px;border-radius:12px;border:1px solid #355071;background:#0b1626;color:white;font-size:16px}
+textarea{min-height:130px;resize:vertical}.help{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.tags{display:flex;flex-wrap:wrap;gap:8px}.tagbtn{border:1px solid #355071;background:#13243a;color:#cfe4ff;border-radius:999px;padding:8px 11px;font-size:13px}
+.tagbtn.active{background:#245487;border-color:#5fb5ff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+button.primary,button.secondary{padding:13px;border-radius:12px;font-size:15px;font-weight:700}
+button.primary{border:0;background:var(--accent);color:#06111d}button.secondary{border:1px solid #38516e;background:#142338;color:#dcecff}
+.preview{padding:13px;border:1px dashed #466585;border-radius:13px;background:#0c1727}.preview h3{margin:0 0 8px}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#213b5a;color:#a8d2ff;font-size:11px;margin:0 4px 4px 0}
+.status{padding:11px;border-radius:12px;margin-top:10px;font-size:13px;display:none}.status.ok{display:block;background:#123d31;color:#bff3dc;border:1px solid #2d7b61}.status.warn{display:block;background:#4a3915;color:#ffe6a7;border:1px solid #8a6a26}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;white-space:pre-wrap;word-break:break-word}
+.small{font-size:12px;color:var(--muted)}a{color:#9ecbff}
+</style>
+</head>
+<body>
+<header>
+<h1>Relink ER 管理画面</h1>
+<p class="sub">Xリンクを入力して、posts.jsonへ追加するデータを作成します。</p>
+</header>
+<main>
+
+<section class="panel">
+<label for="url">XのURL</label>
+<input id="url" placeholder="https://x.com/.../status/...">
+<div class="help">x.com または twitter.com の投稿URLを入力してください。</div>
+<div id="dupStatus" class="status warn"></div>
+</section>
+
+<section class="panel">
+<label for="character">キャラ</label>
+<select id="character">
+<option value="">選択してください</option>
+<option>主人公（グラン／ジータ）</option><option>カタリナ</option><option>ラカム</option><option>イオ</option><option>ロゼッタ</option><option>オイゲン</option><option>フェリ</option><option>ランスロット</option><option>ヴェイン</option><option>パーシヴァル</option><option>ジークフリート</option><option>バザラガ</option><option>ゼタ</option><option>シャルロッテ</option><option>ガンダゴウザ</option><option>カリオストロ</option><option>ナルメア</option><option>ヨダルラーハ</option><option>イド</option><option>シエテ</option><option>ソーン</option><option>サンダルフォン</option><option>ベアトリクス</option><option>ユーステス</option><option>フラウ</option><option>フェディエル</option><option>ガランツァ</option><option>マギラフリラ</option>
+</select>
+</section>
+
+<section class="panel">
+<label for="title">短いタイトル</label>
+<input id="title" placeholder="例：回避型ビルド">
+<div class="help">長い説明は不要です。内容が分かる短い名前だけで大丈夫です。</div>
+</section>
+
+<section class="panel">
+<label>タグ</label>
+<div class="tags" id="tags">
+<button type="button" class="tagbtn" data-tag="火力">火力</button><button type="button" class="tagbtn" data-tag="回避">回避</button><button type="button" class="tagbtn" data-tag="CPU">CPU</button><button type="button" class="tagbtn" data-tag="DPS">DPS</button><button type="button" class="tagbtn" data-tag="マスタースキル">マスタースキル</button><button type="button" class="tagbtn" data-tag="装備">装備</button><button type="button" class="tagbtn" data-tag="ジーン">ジーン</button><button type="button" class="tagbtn" data-tag="立ち回り">立ち回り</button><button type="button" class="tagbtn" data-tag="小ネタ">小ネタ</button><button type="button" class="tagbtn" data-tag="放置">放置</button>
+</div>
+<div class="help">複数選択できます。</div>
+</section>
+
+<section class="panel">
+<div class="row">
+<div>
+<label for="date">追加日</label>
+<input id="date" type="date">
+</div>
+<div>
+<label for="source">情報源</label>
+<select id="source"><option>X</option><option>YouTube</option><option>Reddit</option><option>その他</option></select>
+</div>
+</div>
+</section>
+
+<section class="panel">
+<div class="preview">
+<h3 id="previewTitle">プレビュー</h3>
+<div id="previewTags"></div>
+<div class="small" id="previewUrl">URL未入力</div>
+</div>
+<div class="actions">
+<button class="secondary" id="clear">入力をクリア</button>
+<button class="primary" id="generate">JSONを作成</button>
+</div>
+</section>
+
+<section class="panel">
+<label for="output">生成されたJSON</label>
+<textarea id="output" class="code" readonly placeholder="ここにJSONが表示されます"></textarea>
+<div class="actions">
+<button class="secondary" id="copyObject">1件分をコピー</button>
+<button class="primary" id="copyArray">配列形式でコピー</button>
+</div>
+<div id="copyStatus" class="status ok">コピーしました。</div>
+<div class="help">
+「1件分」は既存の配列へ追加するとき用です。<br>
+「配列形式」はposts.jsonを最初から作り直すとき用です。
+</div>
+</section>
+
+<section class="panel">
+<strong>GitHubへの貼り付け方</strong>
+<p class="small">
+1. GitHubで <code>posts.json</code> を開く<br>
+2. 「…」→ Edit file<br>
+3. 最後の <code>]</code> の直前に、カンマを付けて1件分を貼る<br>
+4. Commit changes
+</p>
+</section>
+
+</main>
+
+<script>
+const existingPosts = [];
+let selectedTags = [];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+async function loadExisting(){
+  try{
+    const r = await fetch("posts.json?v="+Date.now());
+    if(r.ok){
+      const data = await r.json();
+      if(Array.isArray(data)) existingPosts.push(...data);
+    }
+  }catch{}
+}
+
+function normalizeUrl(url){
+  return url.trim().replace("https://twitter.com/","https://x.com/").split("?")[0];
+}
+
+function currentObject(){
+  return {
+    character: $("#character").value,
+    title: $("#title").value.trim(),
+    url: normalizeUrl($("#url").value),
+    tags: [...selectedTags],
+    added_at: $("#date").value,
+    source: $("#source").value
+  };
+}
+
+function validate(obj){
+  if(!obj.url || !/^https:\/\/(x\.com|twitter\.com)\//i.test($("#url").value.trim())) return "XのURLを正しく入力してください。";
+  if(!obj.character) return "キャラを選択してください。";
+  if(!obj.title) return "タイトルを入力してください。";
+  return "";
+}
+
+function updatePreview(){
+  const obj = currentObject();
+  $("#previewTitle").textContent = obj.title || "プレビュー";
+  $("#previewTags").innerHTML = obj.tags.map(t=>`<span class="badge">${esc(t)}</span>`).join("");
+  $("#previewUrl").textContent = obj.url || "URL未入力";
+
+  const exists = existingPosts.some(p=>normalizeUrl(p.url||"")===obj.url && obj.url);
+  const box = $("#dupStatus");
+  if(exists){
+    box.textContent = "⚠ このURLはすでにposts.jsonへ登録されています。";
+    box.className = "status warn";
+  }else{
+    box.style.display = "none";
+  }
+}
+
+document.querySelectorAll(".tagbtn").forEach(btn=>{
+  btn.onclick=()=>{
+    btn.classList.toggle("active");
+    const tag=btn.dataset.tag;
+    selectedTags=btn.classList.contains("active")
+      ? [...selectedTags,tag]
+      : selectedTags.filter(x=>x!==tag);
+    updatePreview();
+  };
+});
+
+["url","character","title","date","source"].forEach(id=>$("#"+id).addEventListener("input",updatePreview));
+
+$("#generate").onclick=()=>{
+  const obj=currentObject();
+  const error=validate(obj);
+  if(error){alert(error);return}
+  $("#output").value=JSON.stringify(obj,null,2);
+};
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch{
+    $("#output").select();
+    document.execCommand("copy");
+  }
+  const s=$("#copyStatus");
+  s.style.display="block";
+  setTimeout(()=>s.style.display="none",1800);
+}
+
+$("#copyObject").onclick=()=>{
+  const obj=currentObject();
+  const error=validate(obj);
+  if(error){alert(error);return}
+  copyText(JSON.stringify(obj,null,2));
+};
+
+$("#copyArray").onclick=()=>{
+  const obj=currentObject();
+  const error=validate(obj);
+  if(error){alert(error);return}
+  copyText(JSON.stringify([obj],null,2));
+};
+
+$("#clear").onclick=()=>{
+  $("#url").value="";
+  $("#character").value="";
+  $("#title").value="";
+  $("#source").value="X";
+  selectedTags=[];
+  document.querySelectorAll(".tagbtn").forEach(x=>x.classList.remove("active"));
+  $("#output").value="";
+  $("#date").value=new Date().toISOString().slice(0,10);
+  updatePreview();
+};
+
+$("#date").value=new Date().toISOString().slice(0,10);
+loadExisting().then(updatePreview);
+</script>
+</body>
+</html>
