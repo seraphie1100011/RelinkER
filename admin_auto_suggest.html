@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111d">
+<title>Relink ER 管理画面</title>
+<style>
+:root{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#08111d;--panel:#101b2b;--panel2:#14243a;--line:#29415f;
+  --text:#eef5ff;--muted:#93a7c1;--accent:#68b5ff;--danger:#ff7b86;
+  --ok:#59d69e;--warn:#ffd36e
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+header{
+  padding:calc(18px + env(safe-area-inset-top)) 16px 18px;
+  background:linear-gradient(135deg,#183963,#0f6b66)
+}
+h1{margin:0 0 5px;font-size:24px}
+header p{margin:0;color:#d6e8f6;font-size:13px;line-height:1.5}
+main{max-width:760px;margin:auto;padding:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.panel h2{font-size:17px;margin:0 0 12px}
+label{display:block;font-size:14px;font-weight:700;margin:12px 0 6px}
+label:first-child{margin-top:0}
+input,select,textarea{
+  width:100%;min-height:46px;padding:11px 12px;border-radius:12px;
+  border:1px solid #365270;background:#0a1625;color:#fff;font-size:16px
+}
+textarea{min-height:110px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #68b5ff66;border-color:var(--accent)}
+.help{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{
+  min-height:38px;border:1px solid #395676;border-radius:999px;
+  background:#14253b;color:#d8eaff;padding:8px 12px;font-size:13px
+}
+.tag.selected{background:#285d91;border-color:#70bbff}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+button{font:inherit}
+.btn{min-height:46px;border-radius:12px;padding:11px 12px;font-weight:700}
+.primary{border:0;background:var(--accent);color:#06121e}
+.secondary{border:1px solid #3a5674;background:#15263b;color:#e3efff}
+.danger{border:1px solid #8a4149;background:#401f27;color:#ffd9dd}
+.suggest{border:1px solid #6b5a2d;background:#41351b;color:#ffeab0}
+.status{display:none;margin-top:10px;padding:11px;border-radius:11px;font-size:13px;line-height:1.5}
+.status.show{display:block}
+.status.ok{background:#123c31;border:1px solid #2f775f;color:#c9f5e2}
+.status.warn{background:#4a3915;border:1px solid #816522;color:#ffe7a6}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.toolbar .btn{min-height:40px;padding:8px 10px;font-size:13px}
+.counter{font-size:12px;color:var(--muted);margin-left:auto;align-self:center}
+.item{background:var(--panel2);border:1px solid #2b4465;border-radius:14px;padding:12px;margin-top:10px}
+.itemtop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item h3{margin:0;font-size:15px;color:#add5ff}
+.item a{color:#8fc9ff;word-break:break-all;font-size:12px}
+.chip{display:inline-block;margin:7px 5px 0 0;padding:4px 8px;border-radius:999px;background:#213c5d;color:#acd4ff;font-size:11px}
+.itembuttons{display:flex;gap:7px;margin-top:11px}
+.itembuttons button{min-height:38px;padding:7px 11px;border-radius:10px;font-size:13px;font-weight:700}
+.empty{text-align:center;padding:22px 12px;color:var(--muted);border:1px dashed #436184;border-radius:13px}
+.filelabel{
+  display:block;border:1px solid #3a5674;border-radius:12px;background:#15263b;
+  padding:12px;text-align:center;font-weight:700;color:#e3efff
+}
+.filelabel input{display:none}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+code{color:#b9d8ff}
+@media(max-width:420px){.actions{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Relink ER 管理画面</h1>
+  <p>X投稿本文からキャラ・タイトル・タグを自動提案できます。</p>
+</header>
+
+<main>
+  <section class="panel">
+    <h2 id="formHeading">新しいリンクを追加</h2>
+
+    <label for="url">Xの投稿URL</label>
+    <input id="url" inputmode="url" autocapitalize="none" autocomplete="off"
+      placeholder="https://x.com/ユーザー名/status/数字">
+
+    <label for="tweetText">X投稿の本文</label>
+    <textarea id="tweetText" placeholder="X投稿本文をコピーしてここへ貼り付け"></textarea>
+    <div class="help">URLだけでは本文を取得できないため、投稿本文も貼り付けると自動提案できます。</div>
+
+    <div class="actions">
+      <button id="analyzeButton" class="btn suggest" type="button">本文から自動提案</button>
+      <button id="clearTextButton" class="btn secondary" type="button">本文だけ消す</button>
+    </div>
+    <div id="suggestStatus" class="status"></div>
+
+    <label for="character">キャラ</label>
+    <select id="character"></select>
+
+    <label for="title">短いタイトル</label>
+    <input id="title" maxlength="80" placeholder="例：回避型ビルド">
+
+    <label>タグ</label>
+    <div id="tagButtons" class="tags"></div>
+    <div class="help">自動提案後も自由に変更できます。</div>
+
+    <div class="actions">
+      <button id="resetButton" class="btn secondary" type="button">入力をクリア</button>
+      <button id="saveButton" class="btn primary" type="button">追加する</button>
+    </div>
+    <div id="formStatus" class="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>登録済みリンク</h2>
+    <div class="toolbar">
+      <button id="exportButton" class="btn primary" type="button">posts.jsonを書き出す</button>
+      <button id="copyButton" class="btn secondary" type="button">JSONをコピー</button>
+      <button id="clearAllButton" class="btn danger" type="button">全件削除</button>
+      <span id="counter" class="counter">0件</span>
+    </div>
+
+    <label class="filelabel">
+      既存のposts.jsonを読み込む
+      <input id="importFile" type="file" accept=".json,application/json">
+    </label>
+
+    <label for="search">一覧を検索</label>
+    <input id="search" placeholder="キャラ名・タイトル・タグ">
+
+    <div id="list"></div>
+    <div id="listStatus" class="status"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var CHARACTERS = {
+    "主人公（グラン／ジータ）":["グラン","ジータ","gran","djeeta"],
+    "カタリナ":["カタリナ","katalina"],
+    "ラカム":["ラカム","rackam"],
+    "イオ":["イオ"," io "],
+    "ロゼッタ":["ロゼッタ","rosetta"],
+    "オイゲン":["オイゲン","eugen"],
+    "フェリ":["フェリ","ferry"],
+    "ランスロット":["ランスロット","lancelot"],
+    "ヴェイン":["ヴェイン","vane"],
+    "パーシヴァル":["パーシヴァル","percival"],
+    "ジークフリート":["ジークフリート","siegfried"],
+    "バザラガ":["バザラガ","vaseraga"],
+    "ゼタ":["ゼタ","zeta"],
+    "シャルロッテ":["シャルロッテ","charlotta"],
+    "ガンダゴウザ":["ガンダゴウザ","ghandagoza"],
+    "カリオストロ":["カリオストロ","cagliostro"],
+    "ナルメア":["ナルメア","narmaya"],
+    "ヨダルラーハ":["ヨダルラーハ","yodarha"],
+    "イド":["イド","id relink"],
+    "シエテ":["シエテ","seofon"],
+    "ソーン":["ソーン","tweyen"],
+    "サンダルフォン":["サンダルフォン","sandalphon"],
+    "ベアトリクス":["ベアトリクス","beatrix"],
+    "ユーステス":["ユーステス","eustace"],
+    "フラウ":["フラウ","fraux"],
+    "フェディエル":["フェディエル","fediel"],
+    "ガランツァ":["ガランツァ","gallanza"],
+    "マギラフリラ":["マギラフリラ","maglielle","magielle"]
+  };
+
+  var TAG_RULES = {
+    "火力":["火力","高火力","ダメージ","攻撃力","上限","damage","火力特化"],
+    "回避":["回避","ジャスト回避","dodge","無敵"],
+    "CPU":["cpu","npc","ai編成","味方ai"],
+    "DPS":["dps","木人","トライアル","秒間","スコア"],
+    "装備":["装備","武器","ビルド","build","加護"],
+    "ジーン":["ジーン","sigil","追撃","戦気","暴君","渾身"],
+    "マスタースキル":["マスタースキル","master skill","master trait"],
+    "立ち回り":["立ち回り","コンボ","操作","ループ","rotation"],
+    "放置":["放置","フルアシスト","オート","auto"],
+    "小ネタ":["小ネタ","仕様","検証","判明","豆知識"]
+  };
+
+  var TITLE_RULES = [
+    {words:["放置","フルアシスト","オート"], title:"放置・オート構成"},
+    {words:["cpu","npc","味方ai"], title:"CPU用構成"},
+    {words:["dps","木人","トライアル"], title:"DPS検証"},
+    {words:["マスタースキル","master skill"], title:"マスタースキル構成"},
+    {words:["回避","ジャスト回避"], title:"回避型ビルド"},
+    {words:["火力","高火力","火力特化"], title:"火力構成"},
+    {words:["装備","武器","ビルド","build"], title:"装備・ビルド"},
+    {words:["コンボ","立ち回り","rotation"], title:"立ち回り・コンボ"},
+    {words:["検証","仕様","判明"], title:"仕様・検証情報"}
+  ];
+
+  var TAGS = Object.keys(TAG_RULES);
+  var STORAGE_KEY = "relink_er_admin_posts_v3";
+  var posts = [];
+  var selectedTags = [];
+  var editingIndex = -1;
+
+  function byId(id) { return document.getElementById(id); }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+    });
+  }
+
+  function today() {
+    var d = new Date();
+    var month = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + month + "-" + day;
+  }
+
+  function normalizeUrl(value) {
+    var url = String(value || "").trim();
+    url = url.replace(/^https:\/\/twitter\.com\//i, "https://x.com/");
+    url = url.split("?")[0].replace(/\/$/, "");
+    return url;
+  }
+
+  function isValidXUrl(value) {
+    return /^https:\/\/(www\.)?(x\.com|twitter\.com)\/[^\/]+\/status\/\d+/i.test(String(value || "").trim());
+  }
+
+  function includesAny(text, words) {
+    var lower = text.toLowerCase();
+    return words.some(function (word) {
+      return lower.indexOf(String(word).toLowerCase()) !== -1;
+    });
+  }
+
+  function showStatus(element, message, type) {
+    element.textContent = message;
+    element.className = "status show " + type;
+  }
+
+  function hideStatus(element) {
+    element.className = "status";
+    element.textContent = "";
+  }
+
+  function saveLocal() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); }
+    catch (error) {}
+  }
+
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (Array.isArray(data)) posts = data;
+      }
+    } catch (error) { posts = []; }
+  }
+
+  function makeCharacterOptions() {
+    var select = byId("character");
+    select.innerHTML = '<option value="">選択してください</option>';
+    Object.keys(CHARACTERS).forEach(function (name) {
+      var option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+  }
+
+  function makeTagButtons() {
+    var root = byId("tagButtons");
+    root.innerHTML = "";
+    TAGS.forEach(function (tag) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "tag";
+      button.textContent = tag;
+      button.setAttribute("data-tag", tag);
+      button.addEventListener("click", function () {
+        var index = selectedTags.indexOf(tag);
+        if (index === -1) {
+          selectedTags.push(tag);
+          button.classList.add("selected");
+        } else {
+          selectedTags.splice(index, 1);
+          button.classList.remove("selected");
+        }
+      });
+      root.appendChild(button);
+    });
+  }
+
+  function syncTagButtons() {
+    var buttons = byId("tagButtons").querySelectorAll(".tag");
+    Array.prototype.forEach.call(buttons, function (button) {
+      var tag = button.getAttribute("data-tag");
+      button.classList.toggle("selected", selectedTags.indexOf(tag) !== -1);
+    });
+  }
+
+  function analyzeText() {
+    var text = byId("tweetText").value.trim();
+    if (!text) {
+      showStatus(byId("suggestStatus"), "X投稿本文を貼り付けてください。", "warn");
+      return;
+    }
+
+    var detectedCharacter = "";
+    Object.keys(CHARACTERS).some(function (name) {
+      if (includesAny(text, CHARACTERS[name])) {
+        detectedCharacter = name;
+        return true;
+      }
+      return false;
+    });
+
+    var detectedTags = [];
+    TAGS.forEach(function (tag) {
+      if (includesAny(text, TAG_RULES[tag])) detectedTags.push(tag);
+    });
+
+    var detectedTitle = "";
+    TITLE_RULES.some(function (rule) {
+      if (includesAny(text, rule.words)) {
+        detectedTitle = rule.title;
+        return true;
+      }
+      return false;
+    });
+
+    if (detectedCharacter) byId("character").value = detectedCharacter;
+    if (detectedTitle) byId("title").value = detectedTitle;
+    selectedTags = detectedTags;
+    syncTagButtons();
+
+    var parts = [];
+    parts.push(detectedCharacter ? "キャラ：" + detectedCharacter : "キャラ候補なし");
+    parts.push(detectedTitle ? "タイトル：" + detectedTitle : "タイトル候補なし");
+    parts.push(detectedTags.length ? "タグ：" + detectedTags.join("・") : "タグ候補なし");
+
+    showStatus(byId("suggestStatus"), parts.join(" / "), detectedCharacter ? "ok" : "warn");
+  }
+
+  function resetForm() {
+    editingIndex = -1;
+    selectedTags = [];
+    byId("url").value = "";
+    byId("tweetText").value = "";
+    byId("character").value = "";
+    byId("title").value = "";
+    byId("formHeading").textContent = "新しいリンクを追加";
+    byId("saveButton").textContent = "追加する";
+    syncTagButtons();
+    hideStatus(byId("formStatus"));
+    hideStatus(byId("suggestStatus"));
+  }
+
+  function validateForm() {
+    var url = normalizeUrl(byId("url").value);
+    var character = byId("character").value;
+    var title = byId("title").value.trim();
+
+    if (!isValidXUrl(url)) return "Xの投稿URLを正しく入力してください。";
+    if (!character) return "キャラを選択してください。";
+    if (!title) return "短いタイトルを入力してください。";
+
+    var duplicateIndex = posts.findIndex(function (post, index) {
+      return index !== editingIndex && normalizeUrl(post.url) === url;
+    });
+    if (duplicateIndex !== -1) return "このURLはすでに登録されています。";
+    return "";
+  }
+
+  function currentEntry() {
+    return {
+      character: byId("character").value,
+      title: byId("title").value.trim(),
+      url: normalizeUrl(byId("url").value),
+      tags: selectedTags.slice(),
+      added_at: today(),
+      source: "X"
+    };
+  }
+
+  function saveEntry() {
+    var error = validateForm();
+    if (error) {
+      showStatus(byId("formStatus"), error, "warn");
+      return;
+    }
+
+    var entry = currentEntry();
+    if (editingIndex >= 0) {
+      entry.added_at = posts[editingIndex].added_at || today();
+      posts[editingIndex] = entry;
+      showStatus(byId("formStatus"), "変更を保存しました。", "ok");
+    } else {
+      posts.unshift(entry);
+      showStatus(byId("formStatus"), "リンクを追加しました。", "ok");
+    }
+
+    saveLocal();
+    renderList();
+    window.setTimeout(resetForm, 700);
+  }
+
+  function editEntry(index) {
+    var post = posts[index];
+    editingIndex = index;
+    byId("url").value = post.url || "";
+    byId("character").value = post.character || "";
+    byId("title").value = post.title || "";
+    selectedTags = Array.isArray(post.tags) ? post.tags.slice() : [];
+    byId("formHeading").textContent = "リンクを編集";
+    byId("saveButton").textContent = "変更を保存";
+    syncTagButtons();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function deleteEntry(index) {
+    var post = posts[index];
+    if (!window.confirm("「" + (post.title || "このリンク") + "」を削除しますか？")) return;
+    posts.splice(index, 1);
+    saveLocal();
+    renderList();
+  }
+
+  function renderList() {
+    var root = byId("list");
+    var query = byId("search").value.trim().toLowerCase();
+    var visible = [];
+
+    posts.forEach(function (post, index) {
+      if (!query || JSON.stringify(post).toLowerCase().indexOf(query) !== -1) {
+        visible.push({post:post,index:index});
+      }
+    });
+
+    byId("counter").textContent = posts.length + "件";
+
+    if (!visible.length) {
+      root.innerHTML = '<div class="empty">' +
+        (posts.length ? "検索条件に合うリンクがありません。" : "まだリンクが登録されていません。") +
+        "</div>";
+      return;
+    }
+
+    root.innerHTML = visible.map(function (row) {
+      var post = row.post;
+      var chips = (post.tags || []).map(function (tag) {
+        return '<span class="chip">' + escapeHtml(tag) + '</span>';
+      }).join("");
+
+      return '<article class="item">' +
+        '<div class="itemtop"><div><h3>' + escapeHtml(post.title) + '</h3>' +
+        '<div class="small">' + escapeHtml(post.character) + '</div></div>' +
+        '<div class="small">' + escapeHtml(post.added_at || "") + '</div></div>' +
+        '<div>' + chips + '</div>' +
+        '<div style="margin-top:8px"><a href="' + escapeHtml(post.url) + '" target="_blank" rel="noopener">' +
+        escapeHtml(post.url) + '</a></div>' +
+        '<div class="itembuttons">' +
+        '<button type="button" class="secondary editButton" data-index="' + row.index + '">編集</button>' +
+        '<button type="button" class="danger deleteButton" data-index="' + row.index + '">削除</button>' +
+        '</div></article>';
+    }).join("");
+
+    Array.prototype.forEach.call(root.querySelectorAll(".editButton"), function (button) {
+      button.addEventListener("click", function () { editEntry(Number(button.getAttribute("data-index"))); });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll(".deleteButton"), function (button) {
+      button.addEventListener("click", function () { deleteEntry(Number(button.getAttribute("data-index"))); });
+    });
+  }
+
+  function exportJson() {
+    var text = JSON.stringify(posts, null, 2);
+    var blob = new Blob([text], {type:"application/json;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "posts.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.setTimeout(function(){URL.revokeObjectURL(url);},1000);
+    showStatus(byId("listStatus"), "posts.jsonを書き出しました。", "ok");
+  }
+
+  function fallbackCopy(text) {
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (error) {}
+    document.body.removeChild(textarea);
+    return ok;
+  }
+
+  function copyJson() {
+    var text = JSON.stringify(posts, null, 2);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        showStatus(byId("listStatus"), "JSONをコピーしました。", "ok");
+      }).catch(function () {
+        showStatus(byId("listStatus"), fallbackCopy(text) ? "JSONをコピーしました。" : "コピーできませんでした。", fallbackCopy(text) ? "ok" : "warn");
+      });
+    } else {
+      showStatus(byId("listStatus"), fallbackCopy(text) ? "JSONをコピーしました。" : "コピーできませんでした。", fallbackCopy(text) ? "ok" : "warn");
+    }
+  }
+
+  function importJson(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(String(reader.result || ""));
+        if (!Array.isArray(data)) throw new Error();
+        posts = data;
+        saveLocal();
+        renderList();
+        showStatus(byId("listStatus"), posts.length + "件を読み込みました。", "ok");
+      } catch (error) {
+        showStatus(byId("listStatus"), "正しいposts.jsonを選んでください。", "warn");
+      }
+      byId("importFile").value = "";
+    };
+    reader.readAsText(file);
+  }
+
+  function clearAll() {
+    if (!posts.length) return;
+    if (!window.confirm("登録済みリンクをすべて削除しますか？")) return;
+    posts = [];
+    saveLocal();
+    resetForm();
+    renderList();
+  }
+
+  function init() {
+    makeCharacterOptions();
+    makeTagButtons();
+    loadLocal();
+    renderList();
+
+    byId("analyzeButton").addEventListener("click", analyzeText);
+    byId("clearTextButton").addEventListener("click", function(){byId("tweetText").value="";hideStatus(byId("suggestStatus"));});
+    byId("saveButton").addEventListener("click", saveEntry);
+    byId("resetButton").addEventListener("click", resetForm);
+    byId("exportButton").addEventListener("click", exportJson);
+    byId("copyButton").addEventListener("click", copyJson);
+    byId("clearAllButton").addEventListener("click", clearAll);
+    byId("search").addEventListener("input", renderList);
+    byId("importFile").addEventListener("change", function () {
+      if (this.files && this.files[0]) importJson(this.files[0]);
+    });
+  }
+
+  init();
+}());
+</script>
+</body>
+</html>
