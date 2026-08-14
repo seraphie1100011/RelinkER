@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-08-14T13:43:56.389521+00:00",
+  "last_run": "2026-08-14T19:15:08.312780+00:00",
   "added": 0,
   "total": 0,
   "search_count": 12,
@@ -32,7 +32,7 @@
       "details": [
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: HTTPError",
+        "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
@@ -82,8 +82,8 @@
       "details": [
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: HTTPError",
-        "https://nitter.tiekoetter.com: HTTPError",
+        "https://nitter.privacyredirect.com: ValueError",
+        "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
     },
@@ -92,7 +92,7 @@
       "details": [
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: ValueError",
+        "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
@@ -122,7 +122,7 @@
       "details": [
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: HTTPError",
+        "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
