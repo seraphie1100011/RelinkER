@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-08-19T18:53:59.816356+00:00",
+  "last_run": "2026-08-20T01:52:29.703555+00:00",
   "added": 0,
   "total": 0,
   "search_count": 12,
@@ -10,9 +10,9 @@
     {
       "search": "総合：グラブルリリンク",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: ValueError",
+        "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
@@ -20,7 +20,7 @@
     {
       "search": "総合：Relink",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -30,7 +30,7 @@
     {
       "search": "総合：Endless Ragnarok",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -40,7 +40,7 @@
     {
       "search": "総合：ER日本語",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -50,17 +50,7 @@
     {
       "search": "主要キャラ",
       "details": [
-        "https://xcancel.com: HTTPError",
-        "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: HTTPError",
-        "https://nitter.tiekoetter.com: ValueError",
-        "https://nitter.space: HTTPError"
-      ]
-    },
-    {
-      "search": "追加キャラ",
-      "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -68,9 +58,19 @@
       ]
     },
     {
+      "search": "追加キャラ",
+      "details": [
+        "https://xcancel.com: URLError",
+        "https://nitter.poast.org: HTTPError",
+        "https://nitter.privacyredirect.com: HTTPError",
+        "https://nitter.tiekoetter.com: ValueError",
+        "https://nitter.space: HTTPError"
+      ]
+    },
+    {
       "search": "ジーン",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -80,7 +80,7 @@
     {
       "search": "ダメージ上限",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -90,7 +90,7 @@
     {
       "search": "高難度攻略",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -100,9 +100,9 @@
     {
       "search": "装備・DPS",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: HTTPError",
+        "https://nitter.privacyredirect.com: ValueError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
@@ -110,7 +110,7 @@
     {
       "search": "CPU・放置",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
@@ -120,9 +120,9 @@
     {
       "search": "素材・周回",
       "details": [
-        "https://xcancel.com: HTTPError",
+        "https://xcancel.com: URLError",
         "https://nitter.poast.org: HTTPError",
-        "https://nitter.privacyredirect.com: ValueError",
+        "https://nitter.privacyredirect.com: HTTPError",
         "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
