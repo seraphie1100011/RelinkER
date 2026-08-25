@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-08-25T01:53:17.188719+00:00",
+  "last_run": "2026-08-25T07:09:07.637979+00:00",
   "added": 0,
   "total": 0,
   "search_count": 12,
@@ -23,7 +23,7 @@
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: URLError",
-        "https://nitter.tiekoetter.com: ValueError",
+        "https://nitter.tiekoetter.com: HTTPError",
         "https://nitter.space: HTTPError"
       ]
     },
@@ -63,7 +63,7 @@
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: HTTPError",
         "https://nitter.privacyredirect.com: URLError",
-        "https://nitter.tiekoetter.com: HTTPError",
+        "https://nitter.tiekoetter.com: ValueError",
         "https://nitter.space: HTTPError"
       ]
     },
