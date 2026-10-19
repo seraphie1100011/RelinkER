@@ -1,13 +1,11 @@
 {
-  "last_run": "2026-10-18T20:45:05.488697+00:00",
-  "added": 1,
+  "last_run": "2026-10-19T04:41:58.686406+00:00",
+  "added": 0,
   "total": 6,
   "search_count": 12,
-  "successful_searches": 1,
+  "successful_searches": 0,
   "character_count": 28,
-  "sources": {
-    "Bing RSS（X検索補助）": 1
-  },
+  "sources": {},
   "errors": [
     {
       "search": "総合：グラブルリリンク",
@@ -71,6 +69,16 @@
     },
     {
       "search": "ジーン",
+      "details": [
+        "https://xcancel.com: HTTPError",
+        "https://nitter.poast.org: URLError",
+        "https://nitter.privacyredirect.com: HTTPError",
+        "https://nitter.tiekoetter.com: ValueError",
+        "https://nitter.space: HTTPError"
+      ]
+    },
+    {
+      "search": "ダメージ上限",
       "details": [
         "https://xcancel.com: HTTPError",
         "https://nitter.poast.org: URLError",
